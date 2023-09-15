@@ -35,7 +35,7 @@ def collect_files_and_folders(path, excluded_folders=None):
     return items
 
 
-def check_folder(folder_name, known_extension, unknown_extension, archives_folder):
+def check_folder(folder_name, known_extension, unknown_extension, archives_folder, dict_extension):
     if folder_name.is_file():
         print(f"I don't sort files")
     elif folder_name.is_dir():
@@ -47,13 +47,12 @@ def check_folder(folder_name, known_extension, unknown_extension, archives_folde
         else:
             for files in folder_name.iterdir():
                 if files.is_dir():
-                    check_folder(files, known_extension, unknown_extension, archives_folder)
+                    check_folder(files, known_extension, unknown_extension, archives_folder, dict_extension)
                 elif archive_extension := is_archive(files.name, dict_extension):
                     if unpack_archive(files, folder_name):
                         files.unlink()
                     else:
                         unknown_extension.add(archive_extension)
-
 
 
 def is_archive(filename, dict_extension):
@@ -72,7 +71,7 @@ def unpack_archive(archive_path, destination_folder):
         return False
 
 
-def sort_files_by_extension(items, dict_extension, known_extension, unknown_extension):
+def sort_files_by_extension(items, dict_extension, known_extension, unknown_extension, my_object_folder):
     for item in items:
         if item.is_file() and not item.name.startswith('.DS_Store'):
             normalized_filename = normalize(item.name)
@@ -120,7 +119,7 @@ def print_result(known_extension, unknown_extension):
         print(f"Unknown Extensions: {unknown_extension}")
 
 
-if __name__ == '__main__':
+def main():
     if len(sys.argv) < 2:
         print(f'Приклад запуску: script.py "/home/user/папка яку треба розібрати"')
     else:
@@ -141,13 +140,17 @@ if __name__ == '__main__':
 
             excluded_folders = {"archives", "video", "audio", "documents", "images", 'unknown'}
 
-            check_folder(my_object_folder, known_extension, unknown_extension, my_object_folder / 'archives')
+            check_folder(my_object_folder, known_extension, unknown_extension, my_object_folder / 'archives', dict_extension)
             items_to_sort = collect_files_and_folders(my_object_folder, excluded_folders)
-            sort_files_by_extension(items_to_sort, dict_extension, known_extension, unknown_extension)
+            sort_files_by_extension(items_to_sort, dict_extension, known_extension, unknown_extension, my_object_folder)
 
-            check_folder(my_object_folder, known_extension, unknown_extension, my_object_folder / 'archives')
+            check_folder(my_object_folder, known_extension, unknown_extension, my_object_folder / 'archives', dict_extension)
             remove_empty_folders(items_to_sort)
 
             print_result(known_extension, unknown_extension)
         else:
             print(f'Шлях "{folder_path}" не існує.')
+
+
+if __name__ == '__main__':
+    main()
